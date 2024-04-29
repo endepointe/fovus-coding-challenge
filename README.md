@@ -2,7 +2,7 @@ https://docs.google.com/document/d/1UJUpYPP8u-9AFvzWergmr8gNweNV6v6YSMBZOJpX718/
 https://docs.google.com/document/d/1Fthhnv6VMFMWyG8W2m1vT_qqivuNRAH4BBLz1_UJzHI/edit#heading=h.59mlkl2c2sgj
 
 ## IAM Policies
-Attach the 
+Attach the following policies to group and placed user in group:
 DynamobDB:
     - ListTables 
     - GetItem
@@ -13,9 +13,6 @@ S3:
     - GetObject
     - PutObject
 
-Group:
-
-User:
 
 ## S3 Bucket Key Information 
 [Bucket Key](https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucket-key.html?icmpid=docs_amazons3_console)
@@ -46,7 +43,14 @@ export const main = async () => {
 };
 ```
 
-## DynamoDB SDK
+## Lambda Setup
+[lambda](https://docs.aws.amazon.com/apigateway/latest/developerguide/getting-started.html#getting-started-create-function)
+[http-api example](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-dynamo-db.html)
+
+To send to DynamoDB, create fn: `send_to_dynamo`
+
+
+## DynamoDB SDK (for reference later)
 [DynamoDB SDK](https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/javascript_dynamodb_code_examples.html)
 ```javascript
 import { ListTablesCommand, DynamoDBClient } from "@aws-sdk/client-dynamodb";

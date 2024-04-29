@@ -2,7 +2,7 @@ import { createRoot } from 'react-dom/client';
 import {useState, useEffect} from 'react';
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { ListTablesCommand, DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { PutCommand, DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
+//import { PutCommand, DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import {nanoid} from 'nanoid';
 
 const s3client = new S3Client({
@@ -13,6 +13,8 @@ const s3client = new S3Client({
     region: process.env.REACT_APP_REGION
 });
 
+// using lambda fn per reqs
+/*
 const dynamoclient = new DynamoDBClient({
     credentials: {
         accessKeyId: process.env.REACT_APP_ACCESSKEYID,
@@ -20,6 +22,7 @@ const dynamoclient = new DynamoDBClient({
     },
     region: process.env.REACT_APP_REGION
 });
+*/
 
 const docClient = DynamoDBDocumentClient.from(dynamoclient);
 
@@ -40,6 +43,10 @@ function InputForm() {
         }
         const putobject = new PutObjectCommand(s3input);
         // needs error handling. using let makes variable addr reusable.
+        // What happens when the user presses enter instead of clicking?
+        // How are user input failures handled gracefully?
+        // Implementing the following nested if statements to handle these
+        // conditions will make the application usable.
         let response = await s3client.send(putobject);
         // error handle on the response
         // I need to make an error handling function to reuse. If there is time, I will.
@@ -52,6 +59,12 @@ function InputForm() {
             response = await dynamoclient.send(listtables);
             if (response.$metadata.httpStatusCode === 200) {
                  // save the inputs and S3 path in dynamodb FileTable via api and lambda fn.
+                const filetabledata = {
+                    id: nanoid(),
+                    input_text: textInput,
+                    input_file_path: String(process.env.REACT_APP_BUCKETNAME)+"/"+fileInput.name,
+                };
+                /*
                 const dynamoput = new PutCommand({
                     TableName: process.env.REACT_APP_FILETABLENAME,
                     Item: {
@@ -62,6 +75,7 @@ function InputForm() {
                 });
                 response = await docClient.send(dynamoput);
                 console.log(response);
+                */
                 alert("put item in dynamodb");
             } else {
                 alert("error performing dynamodb operations.");
