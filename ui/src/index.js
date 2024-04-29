@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client';
 import {useState, useEffect} from 'react';
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import {nanoid} from 'nanoid';
 
 const s3client = new S3Client({
     credentials: {
@@ -22,12 +23,21 @@ function InputForm() {
         }
         const s3input = {
             "Body": fileInput,
-            "Bucket": String(process.env.REACT_APP_BUCKETNAME),
-            "Key": String(process.env.REACT_APP_KEY),
+            "Bucket": process.env.REACT_APP_BUCKETNAME,
+            "Key": fileInput.name,//process.env.REACT_APP_KEY,
         }
         const command = new PutObjectCommand(s3input);
         // needs error handling
         const response = await s3client.send(command);
+        // error handle on the response
+        console.log(response);
+        if (response.$metadata.httpStatusCode === 200) {
+            alert("Successfully uploaded file.");
+            // save the inputs and S3 path in dynamodb FileTable via api and lambda fn.
+            
+        } else {
+            alert("Error uploading the file. Try again.");
+        }
     }
 
     const handleTextInputChange = (e) => {
@@ -41,10 +51,9 @@ function InputForm() {
         const file_array = raw_file.name.split('.');
         // set the name of the [FileInput] and set the extension to '.txt'
         const file_name = file_array[0] + '.txt';
-        let file_text = await raw_file.text();
-        let file = new File([file_text], file_name);
-        console.log(file);
-        let file_size = file.size;
+        const file_text = await raw_file.text();
+        const file = new File([file_text], file_name);
+        const file_size = file.size;
         setFileInput(file);
     }
 
