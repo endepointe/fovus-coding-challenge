@@ -1,13 +1,18 @@
 https://docs.google.com/document/d/1UJUpYPP8u-9AFvzWergmr8gNweNV6v6YSMBZOJpX718/edit
 https://docs.google.com/document/d/1Fthhnv6VMFMWyG8W2m1vT_qqivuNRAH4BBLz1_UJzHI/edit#heading=h.59mlkl2c2sgj
 
-## IAM 
+## IAM Policies
+Attach the 
+DynamobDB:
+    - ListTables 
+    - GetItem
+    - PutItem
+S3:
+    - ListAllMyBuckets
+    - ListBucket
+    - GetObject
+    - PutObject
 
-Policy:
-   - DynamobDB:
-        - ListTables 
-        - GetItem
-        - PutItem
 Group:
 
 User:
