@@ -1,6 +1,8 @@
 import { createRoot } from 'react-dom/client';
 import {useState, useEffect} from 'react';
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { ListTablesCommand, DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { PutCommand, DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import {nanoid} from 'nanoid';
 
 const s3client = new S3Client({
@@ -10,6 +12,16 @@ const s3client = new S3Client({
     },
     region: process.env.REACT_APP_REGION
 });
+
+const dynamoclient = new DynamoDBClient({
+    credentials: {
+        accessKeyId: process.env.REACT_APP_ACCESSKEYID,
+        secretAccessKey: process.env.REACT_APP_SECRETACCESSKEY,
+    },
+    region: process.env.REACT_APP_REGION
+});
+
+const docClient = DynamoDBDocumentClient.from(dynamoclient);
 
 function InputForm() {
     const [textInput, setTextInput] = useState('');
@@ -26,15 +38,36 @@ function InputForm() {
             "Bucket": process.env.REACT_APP_BUCKETNAME,
             "Key": fileInput.name,//process.env.REACT_APP_KEY,
         }
-        const command = new PutObjectCommand(s3input);
-        // needs error handling
-        const response = await s3client.send(command);
+        const putobject = new PutObjectCommand(s3input);
+        // needs error handling. using let makes variable addr reusable.
+        let response = await s3client.send(putobject);
         // error handle on the response
+        // I need to make an error handling function to reuse. If there is time, I will.
         console.log(response);
         if (response.$metadata.httpStatusCode === 200) {
             alert("Successfully uploaded file.");
-            // save the inputs and S3 path in dynamodb FileTable via api and lambda fn.
             
+            // get the table 'FileTable' from dynamodb and upload the data.
+            const listtables = new ListTablesCommand({});
+            response = await dynamoclient.send(listtables);
+            if (response.$metadata.httpStatusCode === 200) {
+                 // save the inputs and S3 path in dynamodb FileTable via api and lambda fn.
+                const dynamoput = new PutCommand({
+                    TableName: process.env.REACT_APP_FILETABLENAME,
+                    Item: {
+                        id: nanoid(),
+                        input_text: textInput,
+                        input_file_path: String(process.env.REACT_APP_BUCKETNAME)+"/"+fileInput.name,
+                    },
+                });
+                response = await docClient.send(dynamoput);
+                console.log(response);
+                alert("put item in dynamodb");
+            } else {
+                alert("error performing dynamodb operations.");
+                return;
+            }
+            return;
         } else {
             alert("Error uploading the file. Try again.");
         }
@@ -46,14 +79,14 @@ function InputForm() {
     }
     const handleFileChange = async (e) => {
         e.preventDefault();
-        const raw_file = e.target.files[0];
+        let raw_file = e.target.files[0];
         // should use typescript here. nametype annotations will do as well.
-        const file_array = raw_file.name.split('.');
+        let file_array = raw_file.name.split('.');
         // set the name of the [FileInput] and set the extension to '.txt'
-        const file_name = file_array[0] + '.txt';
-        const file_text = await raw_file.text();
-        const file = new File([file_text], file_name);
-        const file_size = file.size;
+        let file_name = file_array[0] + '.txt';
+        let file_text = await raw_file.text();
+        let file = new File([file_text], file_name);
+        let file_size = file.size;
         setFileInput(file);
     }
 

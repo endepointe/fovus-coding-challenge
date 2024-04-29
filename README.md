@@ -1,3 +1,16 @@
+https://docs.google.com/document/d/1UJUpYPP8u-9AFvzWergmr8gNweNV6v6YSMBZOJpX718/edit
+https://docs.google.com/document/d/1Fthhnv6VMFMWyG8W2m1vT_qqivuNRAH4BBLz1_UJzHI/edit#heading=h.59mlkl2c2sgj
+
+## IAM 
+
+Policy:
+   - DynamobDB:
+        - ListTables 
+        - GetItem
+        - PutItem
+Group:
+
+User:
 
 ## S3 Bucket Key Information 
 [Bucket Key](https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucket-key.html?icmpid=docs_amazons3_console)
@@ -25,6 +38,42 @@ export const main = async () => {
   } catch (err) {
     console.error(err);
   }
+};
+```
+
+## DynamoDB SDK
+[DynamoDB SDK](https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/javascript_dynamodb_code_examples.html)
+```javascript
+import { ListTablesCommand, DynamoDBClient } from "@aws-sdk/client-dynamodb";
+
+const client = new DynamoDBClient({});
+
+export const main = async () => {
+  const command = new ListTablesCommand({});
+
+  const response = await client.send(command);
+  console.log(response.TableNames.join("\n"));
+  return response;
+};
+```
+```javascript
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { PutCommand, DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
+
+const client = new DynamoDBClient({});
+const docClient = DynamoDBDocumentClient.from(client);
+
+export const main = async () => {
+  const command = new PutCommand({
+    TableName: "HappyAnimals",
+    Item: {
+      CommonName: "Shiba Inu",
+    },
+  });
+
+  const response = await docClient.send(command);
+  console.log(response);
+  return response;
 };
 ```
 
