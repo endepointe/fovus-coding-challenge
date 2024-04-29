@@ -58,7 +58,7 @@ function InputForm() {
     }
 
     return (
-        <form action="" method="get" className="form-example">
+        <form action="" method="get" className="">
             <div>
                 <label htmlFor="text-input">Text input: </label>
                 <input type="text" name="text-input" id="text-input" 
