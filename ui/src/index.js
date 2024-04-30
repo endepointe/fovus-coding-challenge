@@ -13,19 +13,6 @@ const s3client = new S3Client({
     region: process.env.REACT_APP_REGION
 });
 
-// using lambda fn per reqs
-/*
-const dynamoclient = new DynamoDBClient({
-    credentials: {
-        accessKeyId: process.env.REACT_APP_ACCESSKEYID,
-        secretAccessKey: process.env.REACT_APP_SECRETACCESSKEY,
-    },
-    region: process.env.REACT_APP_REGION
-});
-*/
-
-const docClient = DynamoDBDocumentClient.from(dynamoclient);
-
 function InputForm() {
     const [textInput, setTextInput] = useState('');
     const [fileInput, setFileInput] = useState({});
@@ -64,19 +51,7 @@ function InputForm() {
                     input_text: textInput,
                     input_file_path: String(process.env.REACT_APP_BUCKETNAME)+"/"+fileInput.name,
                 };
-                /*
-                const dynamoput = new PutCommand({
-                    TableName: process.env.REACT_APP_FILETABLENAME,
-                    Item: {
-                        id: nanoid(),
-                        input_text: textInput,
-                        input_file_path: String(process.env.REACT_APP_BUCKETNAME)+"/"+fileInput.name,
-                    },
-                });
-                response = await docClient.send(dynamoput);
-                console.log(response);
-                */
-                alert("put item in dynamodb");
+                alert("put item in dynamodb using lamda");
             } else {
                 alert("error performing dynamodb operations.");
                 return;
