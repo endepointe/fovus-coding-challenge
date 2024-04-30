@@ -47,7 +47,68 @@ export const main = async () => {
 [lambda](https://docs.aws.amazon.com/apigateway/latest/developerguide/getting-started.html#getting-started-create-function)
 [http-api example](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-dynamo-db.html)
 
-To send to DynamoDB, create fn: `send_to_dynamo`
+[API Headers](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-cors.html)
+
+To send to DynamoDB, create lambda function: `send_to_dynamo`:
+
+```javascript
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import {
+  DynamoDBDocumentClient,
+  PutCommand,
+} from "@aws-sdk/lib-dynamodb";
+
+const client = new DynamoDBClient({
+    credentials: {
+        accessKeyId: process.env.REACT_APP_ACCESSKEYID,
+        secretAccessKey: process.env.REACT_APP_SECRETACCESSKEY,
+    },
+    region: process.env.REACT_APP_REGION
+});
+
+const dynamo = DynamoDBDocumentClient.from(client);
+
+
+export const handler = async (event, context) => {
+  let body;
+  let statusCode = 200;
+  const headers = {
+    "Content-Type": "application/json",
+  };
+
+  try {
+    switch (event.routeKey) {
+      case "POST /send_to_dynamo":
+        let requestJSON = JSON.parse(event.body);
+        await dynamo.send(
+          new PutCommand({
+            TableName: process.env.REACT_APP_FILETABLENAME,
+            Item: {
+              id: requestJSON.id,
+              input_text: requestJSON.input_text,
+              input_file_path: requestJSON.input_file_path,
+            },
+          })
+        );
+        body = `Post FileTable item ${requestJSON.id}`;
+        break;
+      default:
+        throw new Error(`Unsupported route: "${event.routeKey}"`);
+    }
+  } catch (err) {
+    statusCode = 400;
+    body = err.message;
+  } finally {
+    body = JSON.stringify(body);
+  }
+
+  return {
+    statusCode,
+    body,
+    headers,
+  };
+};
+```
 
 
 ## DynamoDB SDK (for reference later)

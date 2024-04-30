@@ -2,7 +2,6 @@ import { createRoot } from 'react-dom/client';
 import {useState, useEffect} from 'react';
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { ListTablesCommand, DynamoDBClient } from "@aws-sdk/client-dynamodb";
-//import { PutCommand, DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import {nanoid} from 'nanoid';
 
 const s3client = new S3Client({
@@ -12,6 +11,27 @@ const s3client = new S3Client({
     },
     region: process.env.REACT_APP_REGION
 });
+
+const dynamoclient = new DynamoDBClient({
+    credentials: {
+        accessKeyId: process.env.REACT_APP_ACCESSKEYID,
+        secretAccessKey: process.env.REACT_APP_SECRETACCESSKEY,
+    },
+    region: process.env.REACT_APP_REGION
+});
+
+
+// Taken from https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
+async function putData(url = "", data = {}) {
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+    });
+    return response;//.json();
+}
 
 function InputForm() {
     const [textInput, setTextInput] = useState('');
@@ -47,10 +67,12 @@ function InputForm() {
             if (response.$metadata.httpStatusCode === 200) {
                  // save the inputs and S3 path in dynamodb FileTable via api and lambda fn.
                 const filetabledata = {
-                    id: nanoid(),
-                    input_text: textInput,
-                    input_file_path: String(process.env.REACT_APP_BUCKETNAME)+"/"+fileInput.name,
+                    "id": nanoid(),
+                    "input_text": textInput,
+                    "input_file_path": String(process.env.REACT_APP_BUCKETNAME)+"/"+fileInput.name,
                 };
+                let res = await putData("https://mo4ck0e57a.execute-api.us-east-2.amazonaws.com/send_to_dynamo",filetabledata);
+                console.log(res);
                 alert("put item in dynamodb using lamda");
             } else {
                 alert("error performing dynamodb operations.");
@@ -66,6 +88,7 @@ function InputForm() {
         e.preventDefault();
         setTextInput(e.target.value);
     }
+
     const handleFileChange = async (e) => {
         e.preventDefault();
         let raw_file = e.target.files[0];
