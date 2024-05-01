@@ -43,8 +43,11 @@ S3:
   ]
 }
 ```
-## EC2 Start/Stop
-[Start Stop](https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/javascript_ec2_code_examples.html)
+## EC2 Run/Start/Stop/Terminate
+[Run/Start/Stop/Terminate](https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/javascript_ec2_code_examples.html)
+```javascript
+
+```
 
 ```javascript
 // Stop EC2 instances
@@ -230,4 +233,9 @@ export const main = async () => {
   return response;
 };
 ```
+
+## Script to run Lambda function
+[bash](https://docs.aws.amazon.com/cli/latest/userguide/bash_dynamodb_code_examples.html)
+```bash
+
 

@@ -31,15 +31,20 @@ const s3client = new S3Client({
 });
 
 // Taken from https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
-async function putData(url = "", data = {}) {
-    const response = await fetch(url, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-    });
-    return response;//.json();
+async function postData(url = "", data = {}) {
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+        });
+        console.log(response);
+        return response.json();
+    } catch (error) {
+        console.error("Error:", error);
+    }
 }
 
 function InputForm() {
@@ -62,35 +67,43 @@ function InputForm() {
             "Key": fileInput.name,//process.env.REACT_APP_KEY,
         }
         const putobject = new PutObjectCommand(s3input);
+
         // needs error handling. using let makes variable addr reusable.
         // What happens when the user presses enter instead of clicking?
         // How are user input failures handled gracefully?
         // Implementing the following nested if statements to handle these
         // conditions will make the application usable.
         let response = await s3client.send(putobject);
+        console.log(response);
+
         // error handle on the response
         // I need to make an error handling function to reuse. If there is time, I will.
-        console.log(response);
+        
         if (response.$metadata.httpStatusCode === 200) {
             alert("Successfully uploaded file.");
-            
-            // get the table 'FileTable' from dynamodb and upload the data.
-            //const listtables = new ListTablesCommand({});
-            //response = await dynamoclient.send(listtables);
-            //if (response.$metadata.httpStatusCode === 200) {
-                 // save the inputs and S3 path in dynamodb FileTable via api and lambda fn.
-                const filetabledata = {
-                    "id": nanoid(),
-                    "input_text": textInput,
-                    "input_file_path": String(process.env.REACT_APP_BUCKETNAME)+"/"+fileInput.name,
-                };
-                let res = await putData(process.env.REACT_APP_API_GATEWAY,filetabledata);
-                console.log(res);
-                alert("put item in dynamodb using lamda");
-            //} else {
-            //    alert("error performing dynamodb operations.");
-            //    return;
-            //}
+
+            // save the inputs and S3 path in dynamodb FileTable via api and lambda fn.
+            const filetabledata = {
+                "id": nanoid(),
+                "input_text": textInput,
+                "input_file_path": String(process.env.REACT_APP_BUCKETNAME)+"/"+fileInput.name,
+            };
+            let senddynamo = await postData(process.env.REACT_APP_API_SENDTODYNAMO,filetabledata);
+            console.log(senddynamo);
+
+            let runinstance = await postData(process.env.REACT_APP_API_RUNINSTANCE, null);
+
+            let id = JSON.parse(runinstance).value;
+            console.log(id);
+            alert("send script to instance id:"+JSON.parse(runinstance).value);
+            alert("enter: aws s3 cp <scriptname> s3://<bucketname>");
+
+            //let terminstance = await postData(process.env.REACT_APP_API_TERMINATEINSTANCE, {"instanceID": id});
+
+            //console.log(terminstance);
+
+            alert("put item in dynamodb using lamda.terminate instance.");
+
             return;
         } else {
             alert("Error uploading the file. Try again.");
