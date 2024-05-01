@@ -9,9 +9,11 @@
     "eject": "react-scripts eject"
   },
   "dependencies": {
+    "@auth0/auth0-react": "^2.2.4",
     "@aws-sdk/client-connect": "^3.564.0",
     "@aws-sdk/client-dynamodb": "^3.564.0",
     "@aws-sdk/client-s3": "^3.564.0",
+    "@aws-sdk/credential-providers": "^3.565.0",
     "@aws-sdk/lib-dynamodb": "^3.564.0",
     "nanoid": "^5.0.7",
     "react": "^18.3.1",

@@ -1,5 +1,8 @@
-https://docs.google.com/document/d/1UJUpYPP8u-9AFvzWergmr8gNweNV6v6YSMBZOJpX718/edit
-https://docs.google.com/document/d/1Fthhnv6VMFMWyG8W2m1vT_qqivuNRAH4BBLz1_UJzHI/edit#heading=h.59mlkl2c2sgj
+
+# Fovus Coding Challenge
+
+![Requirements](reqs.png)
+
 
 ## IAM Policies
 Attach the following policies to group and placed user in group:
@@ -13,6 +16,88 @@ S3:
     - GetObject
     - PutObject
 
+## Policy to start and stop VM
+[AWS Resource](https://www.youtube.com/watch?v=tniZDP4PDz0)
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:*:*:*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:Start*",
+        "ec2:Stop*"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+```
+## EC2 Start/Stop
+[Start Stop](https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/javascript_ec2_code_examples.html)
+
+```javascript
+// Stop EC2 instances
+
+import { EC2Client, StopInstancesCommand } from "@aws-sdk/client-ec2";
+
+const client = new EC2Client({ region: REGION });
+
+export const handler = async () => {
+  const command = new StopInstancesCommand({
+    // Use DescribeInstancesCommand to find InstanceIds
+    InstanceIds: ["INSTANCE_ID"],
+  });
+
+  try {
+    const { StoppingInstances } = await client.send(command);
+    const instanceIdList = StoppingInstances.map(
+      (instance) => ` • ${instance.InstanceId}`,
+    );
+    console.log("Stopping instances:");
+    console.log(instanceIdList.join("\n"));
+  } catch (err) {
+    console.error(err);
+  }
+};
+```
+
+```javascript
+// Start EC2 instances
+import { EC2Client, StartInstancesCommand } from "@aws-sdk/client-ec2";
+
+const client = new EC2Client({ region: REGION });
+
+export const handler = async () => {
+  const command = new StartInstancesCommand({
+    // Use DescribeInstancesCommand to find InstanceIds
+    InstanceIds: ["INSTANCE_ID"],
+  });
+
+  try {
+    const { StartingInstances } = await client.send(command);
+    const instanceIdList = StartingInstances.map(
+      (instance) => ` • ${instance.InstanceId}`,
+    );
+    console.log("Starting instances:");
+    console.log(instanceIdList.join("\n"));
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+
+```
 
 ## S3 Bucket Key Information 
 [Bucket Key](https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucket-key.html?icmpid=docs_amazons3_console)
@@ -110,8 +195,7 @@ export const handler = async (event, context) => {
 };
 ```
 
-
-## DynamoDB SDK (for reference later)
+## DynamoDB SDK 
 [DynamoDB SDK](https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/javascript_dynamodb_code_examples.html)
 ```javascript
 import { ListTablesCommand, DynamoDBClient } from "@aws-sdk/client-dynamodb";

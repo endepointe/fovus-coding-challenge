@@ -1,25 +1,34 @@
+import { Auth0Provider } from '@auth0/auth0-react';
+import { useAuth0 } from "@auth0/auth0-react";
+import { fromWebToken, fromHttp } from "@aws-sdk/credential-providers"
 import { createRoot } from 'react-dom/client';
 import {useState, useEffect} from 'react';
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { ListTablesCommand, DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {nanoid} from 'nanoid';
-
+[]
+// Auth0 requires an enterprise account. This requiremnt is not satisfied. 
+// This is doable though, just not on my budget. I would like to learn  how to 
+// use other OIDC providers.
+/*
+const token = await getIdTokenClaims();
+console.log(token.__raw);
+const s3client = new S3Client({
+    region: process.env.REACT_APP_REGION,
+    credentials: fromWebToken({
+        roleArn: "insert role if I had an auth0 enterprise account",
+        webIdentityToken: token.__raw,
+    }),
+});
+*/
+// Instead, I keep the .env vars out of the repo.
 const s3client = new S3Client({
     credentials: {
         accessKeyId: process.env.REACT_APP_ACCESSKEYID,
         secretAccessKey: process.env.REACT_APP_SECRETACCESSKEY,
     },
-    region: process.env.REACT_APP_REGION
+    region: process.env.REACT_APP_REGION,
 });
-
-const dynamoclient = new DynamoDBClient({
-    credentials: {
-        accessKeyId: process.env.REACT_APP_ACCESSKEYID,
-        secretAccessKey: process.env.REACT_APP_SECRETACCESSKEY,
-    },
-    region: process.env.REACT_APP_REGION
-});
-
 
 // Taken from https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
 async function putData(url = "", data = {}) {
@@ -36,9 +45,13 @@ async function putData(url = "", data = {}) {
 function InputForm() {
     const [textInput, setTextInput] = useState('');
     const [fileInput, setFileInput] = useState({});
+    const { user, isAuthenticated, isLoading, loginWithRedirect, 
+        getIdTokenClaims,
+        getAccessTokenSilently } = useAuth0();
 
     const submitForm = async (e) => {
         e.preventDefault();
+
         if (!fileInput.name || textInput.length === 0) {
             alert("You must provide text input and a file. Try again.");
             return;
@@ -62,22 +75,22 @@ function InputForm() {
             alert("Successfully uploaded file.");
             
             // get the table 'FileTable' from dynamodb and upload the data.
-            const listtables = new ListTablesCommand({});
-            response = await dynamoclient.send(listtables);
-            if (response.$metadata.httpStatusCode === 200) {
+            //const listtables = new ListTablesCommand({});
+            //response = await dynamoclient.send(listtables);
+            //if (response.$metadata.httpStatusCode === 200) {
                  // save the inputs and S3 path in dynamodb FileTable via api and lambda fn.
                 const filetabledata = {
                     "id": nanoid(),
                     "input_text": textInput,
                     "input_file_path": String(process.env.REACT_APP_BUCKETNAME)+"/"+fileInput.name,
                 };
-                let res = await putData("https://mo4ck0e57a.execute-api.us-east-2.amazonaws.com/send_to_dynamo",filetabledata);
+                let res = await putData(process.env.REACT_APP_API_GATEWAY,filetabledata);
                 console.log(res);
                 alert("put item in dynamodb using lamda");
-            } else {
-                alert("error performing dynamodb operations.");
-                return;
-            }
+            //} else {
+            //    alert("error performing dynamodb operations.");
+            //    return;
+            //}
             return;
         } else {
             alert("Error uploading the file. Try again.");
@@ -102,7 +115,16 @@ function InputForm() {
         setFileInput(file);
     }
 
-    return (
+    if (!user) {
+        return (
+            <div>
+                <p>Please log in to upload files.</p>
+                <button onClick={() => loginWithRedirect()}>Log in</button>
+            </div>
+        );
+    }
+
+    return isAuthenticated && (
         <form action="" method="get" className="">
             <div>
                 <label htmlFor="text-input">Text input: </label>
@@ -123,5 +145,14 @@ function InputForm() {
 
 const root = createRoot(document.getElementById('app'));
 
-root.render(<InputForm />);
-
+root.render(
+    <Auth0Provider
+        domain="endeadmin.us.auth0.com"
+        clientId="4Vcjycvm24cxitAzH2lIsgWMTtKD9Zas"
+        authorizationParams={{
+        redirect_uri: window.location.origin
+    }}
+    >
+        <InputForm />
+    </Auth0Provider>,
+);
